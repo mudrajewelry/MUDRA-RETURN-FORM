@@ -23,7 +23,7 @@ body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40p
     position: fixed; inset: 0;
     background-image: url("logo.png"); background-repeat: no-repeat;
     background-position: center; background-size: 280px;
-    opacity: 0.15; pointer-events: none; z-index: 0;
+    opacity: 0.25; pointer-events: none; z-index: 0;
 }
 
 .container { position: relative; z-index: 1; max-width: 520px; margin: auto; padding: 20px; }
@@ -203,10 +203,10 @@ function renderHistory() {
                     <div>Gold Weight<span>${h.goldW}g</span></div>
                     <div>Stone Carat<span>${h.centC}ct</span></div>
                     <div>Small Diamonds<span>${h.smalC}ct</span></div>
-                    <div>Adjustment<span>${h.retA}</span></div>
+                    <div>Adjustment<span>MMK. ${h.retA}</span></div>
                 </div>
                 <div class="history-footer">
-                    <div><span class="date-text">${h.date}</span><div class="final-amt">${h.grand}</div></div>
+                    <div><span class="date-text">${h.date}</span><div class="final-amt">MMK. ${h.grand}</div></div>
                     <button class="small" onclick="generateSingleInvoice(${h.id})">Invoice PDF</button>
                 </div>
             </div>
@@ -259,7 +259,7 @@ function generateSingleInvoice(id) {
     doc.setFontSize(10);
     doc.text("DESCRIPTION", 18, 84);
     doc.text("DETAIL", 90, 84);
-    doc.text("SUBTOTAL ", 165, 84);
+    doc.text("SUBTOTAL (MMK.)", 165, 84);
 
     // 6. Table Rows
     doc.setFont(undefined, 'normal');
@@ -295,7 +295,7 @@ function generateSingleInvoice(id) {
     doc.setFont(undefined, 'bold');
     doc.text("TOTAL AMOUNT:", 14, y);
     doc.setTextColor(180, 0, 0);
-    doc.text(`${h.grand}`, 196, y, {align: 'right'});
+    doc.text(`MMK. ${h.grand}`, 196, y, {align: 'right'});
 
     // 8. Footer
     doc.setTextColor(120);
