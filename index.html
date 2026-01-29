@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mudra Jewelry - Invoice Pro</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root {
+    --bg: #0e1e40;
+    --card: rgba(255,255,255,0.08);
+    --gold: #d4af37;
+    --text: #ffffff;
+    --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+
+.watermark {
+    position: fixed; inset: 0;
+    background-image: url("logo.png"); background-repeat: no-repeat;
+    background-position: center; background-size: 280px;
+    opacity: 0.05; pointer-events: none; z-index: 0;
+}
+
+.container { position: relative; z-index: 1; max-width: 520px; margin: auto; padding: 20px; }
+
+.header { text-align: center; margin-bottom: 24px; }
+.header img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--gold); }
+.header h1 { margin: 10px 0 4px; font-size: 24px; letter-spacing: 1px; }
+.header p { color: var(--gold); margin: 0; font-size: 14px; opacity: 0.9; }
+
+.card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.05); }
+.card.border { border: 1px solid var(--gold); }
+
+label { display: block; color: var(--gold); margin-bottom: 6px; font-size: 13px; font-weight: bold; text-transform: uppercase; }
+
+input {
+    width: 100%; padding: 12px; border-radius: 8px; border: none; outline: none;
+    margin-bottom: 10px; background: #fff; color: #333; font-size: 15px;
+}
+
+.row { display: flex; gap: 10px; }
+.total-row { display: flex; justify-content: space-between; font-weight: bold; }
+.total-row span:last-child { color: var(--gold); }
+
+button {
+    padding: 12px; background: var(--gold); border: none; border-radius: 12px;
+    font-weight: bold; cursor: pointer; color: #000; transition: 0.2s;
+}
+
+button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+button.full { width: 100%; font-size: 16px; margin-top: 10px; }
+button.small { font-size: 11px; padding: 5px 10px; border-radius: 6px; }
+button:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+.history { margin-top: 40px; }
+.history-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; padding-bottom: 5px; }
+
+.history-card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 15px; position: relative; }
+.history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; font-size: 13px; }
+.history-grid div { color: #bbb; }
+.history-grid span { color: #fff; display: block; font-weight: bold; }
+
+.history-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+.final-amt { color: var(--gold); font-size: 18px; font-weight: 900; }
+.date-text { font-size: 11px; opacity: 0.5; }
+
+.clear-btn { background: transparent; color: var(--danger); font-size: 12px; border: 1px solid var(--danger); padding: 4px 8px; }
+</style>
+</head>
+
+<body>
+
+<div class="watermark"></div>
+
+<div class="container">
+    <div class="header">
+        <img src="logo.png" alt="Logo" id="uiLogo">
+        <h1>Mudra Jewelry</h1>
+        <p>Estimate & Invoice Generator</p>
+    </div>
+
+    <div class="card">
+        <label>Product Name / SKU</label>
+        <input id="productName" placeholder="e.g. Diamond Solitaire Ring">
+    </div>
+
+    <div class="card">
+        <label>Gold Details</label>
+        <div class="row">
+            <input id="goldWeight" type="number" step="0.001" placeholder="Weight (g)">
+            <input id="goldPrice" type="number" placeholder="Price/g">
+        </div>
+        <div class="total-row"><span>Gold Subtotal</span><span id="goldTotal">0.00</span></div>
+    </div>
+
+    <div class="card">
+        <label>Center Stone</label>
+        <div class="row">
+            <input id="centerCarat" type="number" step="0.01" placeholder="Carat">
+            <input id="centerPrice" type="number" placeholder="Price/Ct">
+        </div>
+        <div class="total-row"><span>Stone Subtotal</span><span id="centerTotal">0.00</span></div>
+    </div>
+
+    <div class="card">
+        <label>Side Diamonds</label>
+        <div class="row">
+            <input id="smallCarat" type="number" step="0.01" placeholder="Carat">
+            <input id="smallPrice" type="number" placeholder="Price/Ct">
+        </div>
+        <div class="total-row"><span>Diamond Subtotal</span><span id="smallTotal">0.00</span></div>
+    </div>
+
+    <div class="card">
+        <label>Discount / Exchange (%)</label>
+        <input id="returnPercent" type="number" placeholder="0 - 100">
+    </div>
+
+    <div class="card border">
+        <div class="total-row"><span>Gross Total</span><span id="grossTotal">0.00</span></div>
+        <div class="total-row"><span>Adjustment</span><span id="returnAmount" style="color:var(--danger)!important">0.00</span></div>
+        <hr style="border:0; border-top:1px solid rgba(255,255,255,0.2); margin:10px 0;">
+        <div class="total-row"><span style="font-size:1.2em">Grand Total</span><span id="grandTotal" style="font-size:1.2em">0.00</span></div>
+    </div>
+
+    <button id="saveBtn" class="full" disabled>Save to History</button>
+
+    <div class="history">
+        <div class="history-header">
+            <h2 style="margin:0; font-size:18px;">Recent Calculations</h2>
+            <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+        </div>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+const inputs = document.querySelectorAll("input");
+const goldTotalEl = document.getElementById("goldTotal");
+const centerTotalEl = document.getElementById("centerTotal");
+const smallTotalEl = document.getElementById("smallTotal");
+const grossTotalEl = document.getElementById("grossTotal");
+const returnAmountEl = document.getElementById("returnAmount");
+const grandTotalEl = document.getElementById("grandTotal");
+const saveBtn = document.getElementById("saveBtn");
+const productName = document.getElementById("productName");
+
+inputs.forEach(i => i.addEventListener("input", calculate));
+
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function calculate() {
+    const gT = val("goldWeight") * val("goldPrice");
+    const cT = val("centerCarat") * val("centerPrice");
+    const sT = val("smallCarat") * val("smallPrice");
+    const gross = gT + cT + sT;
+    const disc = gross * (val("returnPercent") / 100);
+    const grand = gross - disc;
+
+    goldTotalEl.textContent = gT.toFixed(2);
+    centerTotalEl.textContent = cT.toFixed(2);
+    smallTotalEl.textContent = sT.toFixed(2);
+    grossTotalEl.textContent = gross.toFixed(2);
+    returnAmountEl.textContent = (-disc).toFixed(2);
+    grandTotalEl.textContent = grand.toFixed(2);
+
+    saveBtn.disabled = productName.value.trim() === "" || gross <= 0;
+}
+
+function saveCalculation() {
+    const history = JSON.parse(localStorage.getItem("m_history") || "[]");
+    const item = {
+        id: Date.now(),
+        product: productName.value,
+        goldW: val("goldWeight"), goldP: val("goldPrice"), goldT: goldTotalEl.textContent,
+        centC: val("centerCarat"), centP: val("centerPrice"), centT: centerTotalEl.textContent,
+        smalC: val("smallCarat"), smalP: val("smallPrice"), smalT: smallTotalEl.textContent,
+        perc: val("returnPercent"), retA: returnAmountEl.textContent,
+        gross: grossTotalEl.textContent,
+        grand: grandTotalEl.textContent,
+        date: new Date().toLocaleString()
+    };
+    history.unshift(item);
+    localStorage.setItem("m_history", JSON.stringify(history));
+    renderHistory();
+    productName.value = ""; calculate();
+}
+
+function renderHistory() {
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    const history = JSON.parse(localStorage.getItem("m_history") || "[]");
+    history.forEach(h => {
+        list.innerHTML += `
+            <div class="history-card">
+                <div style="font-weight:bold; font-size:16px; color:var(--gold)">${h.product}</div>
+                <div class="history-grid">
+                    <div>Gold Weight<span>${h.goldW}g</span></div>
+                    <div>Stone Carat<span>${h.centC}ct</span></div>
+                    <div>Small Diamonds<span>${h.smalC}ct</span></div>
+                    <div>Adjustment<span>Rs. ${h.retA}</span></div>
+                </div>
+                <div class="history-footer">
+                    <div><span class="date-text">${h.date}</span><div class="final-amt">Rs. ${h.grand}</div></div>
+                    <button class="small" onclick="generateSingleInvoice(${h.id})">Invoice PDF</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function generateSingleInvoice(id) {
+    const history = JSON.parse(localStorage.getItem("m_history") || "[]");
+    const h = history.find(item => item.id === id);
+    if(!h) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. Dark Header Background
+    doc.setFillColor(14, 30, 64);
+    doc.rect(0, 0, 210, 45, 'F');
+    
+    // 2. Add Logo (Center-Left)
+    const logoImg = document.getElementById('uiLogo');
+    try {
+        doc.addImage(logoImg, 'PNG', 15, 7, 30, 30); 
+    } catch (e) { 
+        console.error("Logo injection failed", e); 
+    }
+
+    // 3. Header Text
+    doc.setTextColor(212, 175, 55);
+    doc.setFontSize(26);
+    doc.setFont(undefined, 'bold');
+    doc.text("MUDRA JEWELRY", 115, 25, {align: "center"});
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text("OFFICIAL ESTIMATE & INVOICE", 115, 33, {align: "center"});
+
+    // 4. Meta Info
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.text(`Date: ${h.date}`, 14, 58);
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(14);
+    doc.text(`Item: ${h.product}`, 14, 68);
+    
+    // 5. Professional Table Header
+    doc.setFillColor(245, 245, 245);
+    doc.rect(14, 78, 182, 10, 'F');
+    doc.setFontSize(10);
+    doc.text("DESCRIPTION", 18, 84);
+    doc.text("DETAIL", 90, 84);
+    doc.text("SUBTOTAL (Rs.)", 165, 84);
+
+    // 6. Table Rows
+    doc.setFont(undefined, 'normal');
+    let y = 98;
+    const rows = [
+        ["Gold Content", `${h.goldW} g  |  Rate: ${h.goldP}/g`, `${h.goldT}`],
+        ["Center Stone", `${h.centC} ct  |  Rate: ${h.centP}/ct`, `${h.centT}`],
+        ["Small Diamonds", `${h.smalC} ct  |  Rate: ${h.smalP}/ct`, `${h.smalT}`],
+        ["Gross Total", "", `${h.gross}`],
+        ["Discount/Adjustment", `${h.perc}%`, `${h.retA}`]
+    ];
+
+    rows.forEach((row, idx) => {
+        if(idx === 3) { 
+            doc.setFont(undefined, 'bold'); 
+            y += 2; 
+        } 
+        doc.text(row[0], 18, y);
+        doc.text(row[1], 90, y);
+        doc.text(row[2], 190, y, {align: 'right'});
+        y += 10;
+        doc.setFont(undefined, 'normal');
+    });
+
+    // 7. Grand Total Line
+    y += 5;
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(0.8);
+    doc.line(14, y, 196, y);
+    
+    y += 15;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("TOTAL AMOUNT:", 14, y);
+    doc.setTextColor(180, 0, 0);
+    doc.text(`Rs. ${h.grand}`, 196, y, {align: 'right'});
+
+    // 8. Footer
+    doc.setTextColor(120);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'italic');
+    doc.text("Thank you for choosing Mudra Jewelry.", 105, 285, {align: "center"});
+
+    doc.save(`Mudra_Invoice_${h.product.replace(/\s+/g, '_')}.pdf`);
+}
+
+function clearHistory() {
+    if(confirm("Delete all saved calculations?")) {
+        localStorage.removeItem("m_history");
+        renderHistory();
+    }
+}
+
+saveBtn.addEventListener("click", saveCalculation);
+renderHistory();
+</script>
+
+</body>
+</html>
