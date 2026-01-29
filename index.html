@@ -203,10 +203,10 @@ function renderHistory() {
                     <div>Gold Weight<span>${h.goldW}g</span></div>
                     <div>Stone Carat<span>${h.centC}ct</span></div>
                     <div>Small Diamonds<span>${h.smalC}ct</span></div>
-                    <div>Adjustment<span>Rs. ${h.retA}</span></div>
+                    <div>Adjustment<span>${h.retA}</span></div>
                 </div>
                 <div class="history-footer">
-                    <div><span class="date-text">${h.date}</span><div class="final-amt">Rs. ${h.grand}</div></div>
+                    <div><span class="date-text">${h.date}</span><div class="final-amt">${h.grand}</div></div>
                     <button class="small" onclick="generateSingleInvoice(${h.id})">Invoice PDF</button>
                 </div>
             </div>
@@ -259,7 +259,7 @@ function generateSingleInvoice(id) {
     doc.setFontSize(10);
     doc.text("DESCRIPTION", 18, 84);
     doc.text("DETAIL", 90, 84);
-    doc.text("SUBTOTAL (Rs.)", 165, 84);
+    doc.text("SUBTOTAL ", 165, 84);
 
     // 6. Table Rows
     doc.setFont(undefined, 'normal');
@@ -295,7 +295,7 @@ function generateSingleInvoice(id) {
     doc.setFont(undefined, 'bold');
     doc.text("TOTAL AMOUNT:", 14, y);
     doc.setTextColor(180, 0, 0);
-    doc.text(`Rs. ${h.grand}`, 196, y, {align: 'right'});
+    doc.text(`${h.grand}`, 196, y, {align: 'right'});
 
     // 8. Footer
     doc.setTextColor(120);
